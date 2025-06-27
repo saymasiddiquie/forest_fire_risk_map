@@ -101,13 +101,13 @@ class RasterDataset(Dataset):
                         data = (data - min_val) / (max_val - min_val)
                     self.image_stack.append(data)
         
-        # Stack channels and ensure shape is (channels, height, width)
+        
         self.image_stack = np.stack(self.image_stack)
         
-        # Get reference file for metadata
+       
         self.ref_file = os.path.join(image_dir, os.listdir(image_dir)[0])
         
-        # Ensure number of channels matches model expectations
+        
         num_channels = self.image_stack.shape[0]
         print(f"Found {num_channels} input channels in the dataset")
         if num_channels != 9:
@@ -119,13 +119,12 @@ class RasterDataset(Dataset):
         if len(image.shape) == 3:  # If shape is (height, width, channels)
             image = np.transpose(image, (2, 0, 1))
         
-        # Convert to torch tensor and add batch dimension
+       
         image = torch.tensor(image).unsqueeze(0)
         
         if self.transform:
             image = self.transform(image)
         
-        # Ensure channels are in the second dimension
         if image.shape[2] == self.image_stack.shape[0]:
             image = image.permute(0, 3, 1, 2)
         
@@ -133,7 +132,7 @@ class RasterDataset(Dataset):
 
     def __len__(self):
         return 1
-        return image.unsqueeze(0)  # Add batch dimension
+        return image.unsqueeze(0)  
 
 
 
@@ -175,17 +174,17 @@ if __name__ == "__main__":
         zip_ref.extractall(extract_to)
     
     # Setup paths
-    image_dir = os.path.join(extract_to, "stacked_inputs")  # Folder with .tif raster inputs
+    image_dir = os.path.join(extract_to, "stacked_inputs") 
     
     # Initialize dataset
     transform = transforms.Compose([
-        transforms.Lambda(lambda x: x.float() / 255.0)  # Normalize to [0,1] range
+        transforms.Lambda(lambda x: x.float() / 255.0)  
     ])
     
     dataset = RasterDataset(image_dir, transform=transform)
     
     # Get the input data directly
-    input_data = dataset[0]  # Already has batch dimension from dataset
+    input_data = dataset[0]  
     
     # Initialize model and device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -208,8 +207,8 @@ if __name__ == "__main__":
             count=1  # Single channel output
         )
         
-        # Ensure prediction is in the correct shape (height, width)
-        prediction = prediction.squeeze()  # Remove batch and channel dimensions
+        
+        prediction = prediction.squeeze()  
         
         with rasterio.open("./output/prediction.tif", "w", **meta) as dst:
             dst.write(prediction.astype(rasterio.uint8), 1)
