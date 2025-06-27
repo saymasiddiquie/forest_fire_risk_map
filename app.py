@@ -1,80 +1,55 @@
 import streamlit as st
-import os
-import zipfile
-import tempfile
 import pandas as pd
-import fitz  # PyMuPDF for PDF processing
-from docx import Document  # python-docx for DOCX processing
 import json
-import numpy as np
-from PIL import Image
-import matplotlib.pyplot as plt
-import rasterio
+from docx import Document  # python-docx for DOCX processing
+import fitz  # PyMuPDF for PDF processing
 
-# Color map for visualization
-def create_fire_risk_color_map():
-    cmap = plt.get_cmap('viridis')
-    def color_func(value):
-        norm_val = (value - 0) / (255 - 0)
-        return (cmap(norm_val) * 255).astype(np.uint8)
-    return color_func
+# Add about section
+st.sidebar.header("About")
+st.sidebar.info("""
+This application supports multiple file types for analysis:
 
-color_map = create_fire_risk_color_map()
+1. PDF files
+   - Extracts and displays text content
+   - Preserves document formatting
 
-# Initialize Streamlit app
-st.title("Forest Fire Risk Analysis")
+2. DOCX files
+   - Extracts and displays document text
+   - Preserves paragraph structure
 
-# Create a temporary directory for file uploads
-upload_dir = "uploads"
-os.makedirs(upload_dir, exist_ok=True)
+3. CSV files
+   - Displays data in tabular format
+   - Shows basic statistics
+   - Data visualization
+
+4. JSON files
+   - Displays structured data
+   - Easy to read format
+
+The application provides a simple way to analyze and visualize different types of files without requiring complex processing.
+""")
 
 # File upload section
-st.header("Upload Files")
+st.title("File Analyzer")
+st.header("Upload a File")
 st.write("Upload different types of files for analysis:")
 
 # File upload options
 file_type = st.selectbox(
     "Select file type",
-    ["ZIP (Rasters)", "PDF", "DOCX", "CSV", "JSON"]
+    ["CSV", "PDF", "DOCX", "JSON"]
 )
 
 uploaded_file = st.file_uploader(
     "Choose a file",
-    type=["zip", "pdf", "docx", "csv", "json"]
+    type=["csv", "pdf", "docx", "json"]
 )
 
 if uploaded_file is not None:
-    # Save uploaded file
-    temp_file_path = os.path.join(upload_dir, uploaded_file.name)
-    with open(temp_file_path, "wb") as f:
-        f.write(uploaded_file.getvalue())
-
     # Process file based on type
-    if file_type == "ZIP (Rasters)":
-        # Process ZIP file containing rasters
-        extract_to = os.path.join(upload_dir, "extracted")
-        os.makedirs(extract_to, exist_ok=True)
-        with zipfile.ZipFile(temp_file_path, 'r') as zip_ref:
-            zip_ref.extractall(extract_to)
-
-        # Get first raster file for visualization
-        raster_files = [f for f in os.listdir(extract_to) if f.endswith('.tif')]
-        if raster_files:
-            sample_raster = raster_files[0]
-            with rasterio.open(os.path.join(extract_to, sample_raster)) as src:
-                # Read first band as sample
-                sample_data = src.read(1)
-                
-                # Create a simple visualization
-                norm_data = (sample_data - sample_data.min()) / (sample_data.max() - sample_data.min())
-                rgb_data = color_map(sample_data)
-                
-                st.header("Sample Raster Visualization")
-                st.image(rgb_data, caption=f"Visualization of {sample_raster}", use_column_width=True)
-
-    elif file_type == "PDF":
+    if file_type == "PDF":
         # Process PDF file
-        doc = fitz.open(temp_file_path)
+        doc = fitz.open("streamlit", uploaded_file)
         text = ""
         for page in doc:
             text += page.get_text()
@@ -84,7 +59,7 @@ if uploaded_file is not None:
 
     elif file_type == "DOCX":
         # Process DOCX file
-        doc = Document(temp_file_path)
+        doc = Document(uploaded_file)
         text = ""
         for para in doc.paragraphs:
             text += para.text + "\n"
@@ -94,7 +69,7 @@ if uploaded_file is not None:
 
     elif file_type == "CSV":
         # Process CSV file
-        df = pd.read_csv(temp_file_path)
+        df = pd.read_csv(uploaded_file)
         st.header("CSV Data Preview")
         st.dataframe(df.head())
         
@@ -104,8 +79,7 @@ if uploaded_file is not None:
 
     elif file_type == "JSON":
         # Process JSON file
-        with open(temp_file_path, 'r') as f:
-            data = json.load(f)
+        data = json.load(uploaded_file)
         
         st.header("JSON Data Preview")
         st.json(data)
@@ -115,24 +89,20 @@ st.sidebar.header("About")
 st.sidebar.info("""
 This application supports multiple file types for analysis:
 
-1. ZIP files containing raster data
-   - Visualizes sample raster data
-   - Shows basic statistics
-
-2. PDF files
+1. PDF files
    - Extracts and displays text content
    - Preserves document formatting
 
-3. DOCX files
+2. DOCX files
    - Extracts and displays document text
    - Preserves paragraph structure
 
-4. CSV files
+3. CSV files
    - Displays data in tabular format
    - Shows basic statistics
    - Data visualization
 
-5. JSON files
+4. JSON files
    - Displays structured data
    - Easy to read format
 
