@@ -1,23 +1,18 @@
 import streamlit as st
 import pandas as pd
 import json
-import fitz  # PyMuPDF for PDF processing
 
 # Add about section
 st.sidebar.header("About")
 st.sidebar.info("""
-This application supports multiple file types for analysis:
+This application provides basic file analysis capabilities:
 
-1. PDF files
-   - Extracts and displays text content
-   - Preserves document formatting
-
-2. CSV files
+1. CSV files
    - Displays data in tabular format
    - Shows basic statistics
    - Data visualization
 
-3. JSON files
+2. JSON files
    - Displays structured data
    - Easy to read format
 
@@ -32,27 +27,17 @@ st.write("Upload different types of files for analysis:")
 # File upload options
 file_type = st.selectbox(
     "Select file type",
-    ["CSV", "PDF", "JSON"]
+    ["CSV", "JSON"]
 )
 
 uploaded_file = st.file_uploader(
     "Choose a file",
-    type=["csv", "pdf", "json"]
+    type=["csv", "json"]
 )
 
 if uploaded_file is not None:
     # Process file based on type
-    if file_type == "PDF":
-        # Process PDF file
-        doc = fitz.open("streamlit", uploaded_file)
-        text = ""
-        for page in doc:
-            text += page.get_text()
-        
-        st.header("PDF Content Preview")
-        st.text_area("Extracted Text", text, height=200)
-
-    elif file_type == "CSV":
+    if file_type == "CSV":
         # Process CSV file
         df = pd.read_csv(uploaded_file)
         st.header("CSV Data Preview")
