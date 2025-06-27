@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import json
-from docx import Document  # python-docx for DOCX processing
 import fitz  # PyMuPDF for PDF processing
 
 # Add about section
@@ -13,16 +12,12 @@ This application supports multiple file types for analysis:
    - Extracts and displays text content
    - Preserves document formatting
 
-2. DOCX files
-   - Extracts and displays document text
-   - Preserves paragraph structure
-
-3. CSV files
+2. CSV files
    - Displays data in tabular format
    - Shows basic statistics
    - Data visualization
 
-4. JSON files
+3. JSON files
    - Displays structured data
    - Easy to read format
 
@@ -37,12 +32,12 @@ st.write("Upload different types of files for analysis:")
 # File upload options
 file_type = st.selectbox(
     "Select file type",
-    ["CSV", "PDF", "DOCX", "JSON"]
+    ["CSV", "PDF", "JSON"]
 )
 
 uploaded_file = st.file_uploader(
     "Choose a file",
-    type=["csv", "pdf", "docx", "json"]
+    type=["csv", "pdf", "json"]
 )
 
 if uploaded_file is not None:
@@ -55,16 +50,6 @@ if uploaded_file is not None:
             text += page.get_text()
         
         st.header("PDF Content Preview")
-        st.text_area("Extracted Text", text, height=200)
-
-    elif file_type == "DOCX":
-        # Process DOCX file
-        doc = Document(uploaded_file)
-        text = ""
-        for para in doc.paragraphs:
-            text += para.text + "\n"
-        
-        st.header("DOCX Content Preview")
         st.text_area("Extracted Text", text, height=200)
 
     elif file_type == "CSV":
